@@ -1,5 +1,3 @@
-* IMPORTANT NOTE *
-
 Overview
 ========
 
