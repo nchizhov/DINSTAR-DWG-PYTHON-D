@@ -43,7 +43,7 @@ How to use
 Depends
 =======
                       
-- Required Python 2
+- Required Python 2.7
                       
                        
 If any doubts arises, please visit my blog http://blog.kgd.in or write me an email, I will be answering as soon as I can.

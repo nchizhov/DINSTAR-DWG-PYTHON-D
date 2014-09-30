@@ -4,7 +4,7 @@ import dwgconfig
 from threading import Timer
 from struct import pack, unpack
 from random import randint
-from sys import maxint, exit
+from sys import exit
 from time import time, strftime
 import codecs
 import os
@@ -137,7 +137,7 @@ class DWGD:
         """
         return {'id': {'mac': '\x00\xfa\xb3\xd2\xd3\xaa',
                        'time': int(time()),
-                       'serial': randint(1, maxint - 1)}}
+                       'serial': randint(1, 1000000)}}
 
     def saveSMS(self, body):
         """
