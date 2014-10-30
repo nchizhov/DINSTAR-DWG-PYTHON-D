@@ -52,15 +52,20 @@ class DWGD:
         """
         if data:
             logger('[PROCESS] <- %s' % data.encode("hex"), True)
-            header = {'len': unpack('!L', data[0:4])[0],
-                      'id': {'mac': unpack('!6s', data[4:10])[0],
-                             'time': unpack('!L', data[12:16])[0],
-                             'serial': unpack('!L', data[16:20])[0]},
-                      'type': unpack('!H', data[20:22])[0],
-                      'flag': unpack('!H', data[22:24])[0]}
-            sdata = self.parseType(header['type'], data[24:])
-            if sdata['type']:
-                self.sendDWG(header, sdata)
+            while data:
+                header = {'len': unpack('!L', data[0:4])[0],
+                          'id': {'mac': unpack('!6s', data[4:10])[0],
+                                 'time': unpack('!L', data[12:16])[0],
+                                 'serial': unpack('!L', data[16:20])[0]},
+                          'type': unpack('!H', data[20:22])[0],
+                          'flag': unpack('!H', data[22:24])[0]}
+                data_len = 24 + header['len']
+                if len(data) < data_len:
+                    break
+                sdata = self.parseType(header['type'], data[24:data_len])
+                if sdata['type']:
+                    self.sendDWG(header, sdata)
+                data = data[data_len:]
 
     def parseType(self, htype, data):
         """
@@ -104,6 +109,9 @@ class DWGD:
                 logger('[SYSTEM] Authentication success', False)
             else:
                 logger('[SYSTEM] Authentication failed', False)
+        elif htype == 515:  # Call state report
+            sdata['type'] = 516
+            sdata['body'] = pack('!?', False)
         return sdata
 
     def pingDWG(self):
@@ -178,6 +186,7 @@ class DWGD:
             logger('[DATA] Received USSD from port %s' % body['port'], False)
         except:
             logger('[DATA] Received unknown USSD', False)
+
 
     def checkSMS(self):
         """
