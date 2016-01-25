@@ -17,6 +17,7 @@ class DWGD:
     conn = None
     ping_timer = 45.0
     check_timer = 5.0
+    ping_count = 0
 
     def __init__(self, conn):
         self.conn = conn
@@ -73,7 +74,9 @@ class DWGD:
         """
         sdata = {'type': 0,
                  'body': ''}
-        if htype == 7:   # Status message
+        if htype == 0: # recieved keep alive
+            self.ping_count = 0
+        elif htype == 7:   # Status message
             sdata['type'] = 8
             sdata['body'] = pack('!?', False)
         elif htype == 5:   # Receive message
@@ -118,11 +121,19 @@ class DWGD:
         """
         Ping DWG
         """
-        sdata = {'type': 0,
-                 'body': ''}
-        self.sendDWG(self.create_header(), sdata)
-        self.ping_t = Timer(self.ping_timer, self.pingDWG)
-        self.ping_t.start()
+        if self.ping_count > 2:
+            if not self.ping_t is None:
+                self.ping_t.cancel()
+            if not self.check_t is None:
+                self.check_t.cancel()
+            self.conn.close()
+        else:
+            sdata = {'type': 0,
+                     'body': ''}
+            self.ping_count += self.ping_count
+            self.sendDWG(self.create_header(), sdata)
+            self.ping_t = Timer(self.ping_timer, self.pingDWG)
+            self.ping_t.start()
 
     def sendDWG(self, header, sdata):
         """
@@ -152,7 +163,11 @@ class DWGD:
         Saving SMS to file
         """
         try:
-            sms = codecs.open('%s%s.%s' % (dwgconfig.income_path, body['number'], int(time())), 'w', 'utf-8')
+            sms_partfilename = '%s%s.%s' % (dwgconfig.income_path, body['number'], int(time()))
+            sms_filename = '%s.%s' % (sms_partfilename, randint(1, 999999))
+            while os.path.isfile(sms_filename):
+                sms_filename = '%s.%s' % (sms_partfilename, randint(1, 999999))
+            sms = codecs.open(sms_filename, 'w', 'utf-8')
             sms.write('Number: %s\n' % body['number'])
             sms.write('Port: %s\n' % body['port'])
             sms.write('Time: %s\n' % body['timestamp'])
@@ -173,7 +188,11 @@ class DWGD:
         Saving USSD to file
         """
         try:
-            ussd = codecs.open('%s%s.%s' % (dwgconfig.ussd_income_path, body['port'], int(time())), 'w', 'utf-8')
+            ussd_partfilename = '%s%s.%s' % (dwgconfig.ussd_income_path, body['port'], int(time()))
+            ussd_filename = '%s.%s' % (ussd_partfilename, randint(1, 999999))
+            while os.path.isfile(ussd_filename):
+                ussd_filename = '%s.%s' % (ussd_partfilename, randint(1, 999999))
+            ussd = codecs.open(ussd_filename, 'w', 'utf-8')
             ussd.write('Port: %s\n' % body['port'])
             ussd.write('Time: %s\n' % strftime('%d%m%Y%H%M%S'))
             ussd.write('Status: %s\n' % body['status'])
