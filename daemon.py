@@ -7,6 +7,7 @@ import time
 import atexit
 from signal import SIGTERM
 
+
 class Daemon:
     """
     A generic daemon class.
@@ -62,7 +63,6 @@ class Daemon:
 
     def delpid(self):
         os.remove(self.pidfile)
-
 
     def start(self):
         try:

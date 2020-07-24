@@ -1,7 +1,7 @@
 Overview
 ========
 
-This Script for VoIP GSM Module - Dinstar DWG 2000: sending and receiveing SMS/USSD from/to gateway (written on Python2).
+This Script for VoIP GSM Module - Dinstar DWG 2000: sending and receiving SMS/USSD from/to gateway (written on Python2).
 
 How to compile
 ==============
@@ -20,6 +20,8 @@ How to install
 - On/Off debugging (debug)
 - Path for pidfile, if running as daemon (pidfile)
 - Path to logfile, if running as daemon (logfile)
+- Format of log line (log_format)
+- Format of date in log line (log_date_format)
             
 How to use
 ==========
@@ -31,13 +33,13 @@ How to use
   - restart: restarting script as daemon
   - help: showing help message for arguments
 - Sending SMS format:
-- First line - phone number
-- Second line - port
-- Other lines - message for send
+  - First line - phone number
+  - Second line - port
+  - Other lines - message for send
 - Received message as eml format.
-- Sending USSD-command format
-- First line - port
-- Second line - USSD-command (ex. *100#)
+- Sending USSD-command format:
+  - First line - port
+  - Second line - USSD-command (ex. *100#)
 - Received message as eml format.
                       
 Depends

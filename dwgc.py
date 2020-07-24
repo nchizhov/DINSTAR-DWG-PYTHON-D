@@ -8,6 +8,7 @@ from sys import exit
 from time import time, strftime
 import codecs
 import os
+import logging
 from subprocess import Popen
 
 
@@ -40,19 +41,15 @@ class DWGD:
                 exit()
             except:
                 break
-        if not self.ping_t is None:
-            self.ping_t.cancel()
-        if not self.check_t is None:
-            self.check_t.cancel()
+        self.stop_ping()
         self.conn.close()
-
 
     def parseDWG(self, data):
         """
         Parsing DWG Messages
         """
         if data:
-            logger('[PROCESS] <- %s' % data.encode("hex"), True)
+            logging.debug('[PROCESS] <- %s' % data.encode("hex"))
             while data:
                 header = {'len': unpack('!L', data[0:4])[0],
                           'id': {'mac': unpack('!6s', data[4:10])[0],
@@ -74,7 +71,7 @@ class DWGD:
         """
         sdata = {'type': 0,
                  'body': ''}
-        if htype == 0: # recieved keep alive
+        if htype == 0:  # received keep alive
             self.ping_count = 0
         elif htype == 7:   # Status message
             sdata['type'] = 8
@@ -109,9 +106,9 @@ class DWGD:
             if body['login'] == dwgconfig.login and body['password'] == dwgconfig.password:
                 sdata['type'] = 16
                 sdata['body'] = pack('!?', False)
-                logger('[SYSTEM] Authentication success', False)
+                logging.info('[SYSTEM] Authentication success')
             else:
-                logger('[SYSTEM] Authentication failed', False)
+                logging.info('[SYSTEM] Authentication failed')
         elif htype == 515:  # Call state report
             sdata['type'] = 516
             sdata['body'] = pack('!?', False)
@@ -122,10 +119,7 @@ class DWGD:
         Ping DWG
         """
         if self.ping_count > 2:
-            if not self.ping_t is None:
-                self.ping_t.cancel()
-            if not self.check_t is None:
-                self.check_t.cancel()
+            self.stop_ping()
             self.conn.close()
         else:
             sdata = {'type': 0,
@@ -147,7 +141,7 @@ class DWGD:
         pkt += pack('!H', sdata['type'])
         pkt += pack('!H', 0)
         pkt += sdata['body']
-        logger('[PROCESS] -> %s' % pkt.encode("hex"), True)
+        logging.debug('[PROCESS] -> %s' % pkt.encode("hex"))
         self.conn.send(pkt)
 
     def create_header(self):
@@ -179,9 +173,9 @@ class DWGD:
                 sms.write(body['content'].decode('utf-16-be'))
             sms.close()
             Popen(dwgconfig.run_program)
-            logger('[DATA] Received SMS from number %s' % body['number'], False)
+            logging.info('[DATA] Received SMS from number %s' % body['number'])
         except:
-            logger('[DATA] Received unknown SMS', False)
+            logging.info('[DATA] Received unknown SMS')
 
     def saveUSSD(self, body):
         """
@@ -202,23 +196,24 @@ class DWGD:
             elif body['encoding'] == 1:
                 ussd.write(body['content'].decode('utf-16-be'))
             ussd.close()
-            logger('[DATA] Received USSD from port %s' % body['port'], False)
+            logging.info('[DATA] Received USSD from port %s' % body['port'])
         except:
-            logger('[DATA] Received unknown USSD', False)
-
+            logging.info('[DATA] Received unknown USSD')
 
     def checkSMS(self):
         """
         Check SMS/USSD in folders
         """
         files = [f for f in os.listdir(dwgconfig.send_path) if os.path.isfile(os.path.join(dwgconfig.send_path, f))]
+        port = None
+        number = None
         if len(files):
             sms = codecs.open(dwgconfig.send_path + files[0], 'r', 'utf-8').readlines()
             f_send = True
             if len(sms) > 2:
                 try:
                     number = str(sms[0].strip())
-                    if not number.isdigit(): f_send = False
+                    # if not number.isdigit(): f_send = False
                 except:
                     f_send = False
                 try:
@@ -233,7 +228,7 @@ class DWGD:
                     sdata = {'type': 1,
                              'body': pack('!BBBB24sH%ds' % len(content), port, 1, 0, 1, number, len(content), content)}
                     self.sendDWG(self.create_header(), sdata)
-                    logger('[DATA] Sending SMS to number %s' % number, False)
+                    logging.info('[DATA] Sending SMS to number %s' % number)
             os.remove(dwgconfig.send_path + files[0])
         else:
             files = [f for f in os.listdir(dwgconfig.ussd_send_path) if os.path.isfile(os.path.join(dwgconfig.ussd_send_path, f))]
@@ -253,23 +248,13 @@ class DWGD:
                         sdata = {'type': 9,
                                  'body': pack('!BBH%ds' % len(number), port, 1, len(number), number)}
                         self.sendDWG(self.create_header(), sdata)
-                        logger('[DATA] Sending USSD to port %s to number %s' % (port, number), False)
+                        logging.info('[DATA] Sending USSD to port %s to number %s' % (port, number))
                 os.remove(dwgconfig.ussd_send_path + files[0])
         self.check_t = Timer(self.check_timer, self.checkSMS)
         self.check_t.start()
 
-
-def logger(message, debug):
-    now = strftime('%d.%m.%Y %H:%M:%S')
-    line = '[%s] %s' % (now, message)
-    if dwgconfig.as_daemon:
-        line += '\n'
-        if debug and dwgconfig.debug:
-            open(dwgconfig.logfile, 'a').write(line)
-        elif not debug:
-            open(dwgconfig.logfile, 'a').write(line)
-    else:
-        if debug and dwgconfig.debug:
-            print line
-        elif not debug:
-            print line
+    def stop_ping(self):
+        if self.ping_t is not None:
+            self.ping_t.cancel()
+        if self.check_t is not None:
+            self.check_t.cancel()
