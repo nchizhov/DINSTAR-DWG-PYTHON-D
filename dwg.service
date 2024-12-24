@@ -1,0 +1,12 @@
+[Unit]
+Description=DWG SMS Tmux Service
+
+[Service]
+ExecStart=/opt/dwgd/dwg.py
+Type=oneshot
+User=root
+WorkingDirectory=/opt/dwgd
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

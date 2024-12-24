@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import logging
 import dwgconfig
 
 
-def create_logger(debug=False):
+def create_logger(debug: bool = False) -> None:
     log = logging.getLogger()
     formatter = logging.Formatter(dwgconfig.log_format, datefmt=dwgconfig.log_date_format)
     log_level = logging.DEBUG

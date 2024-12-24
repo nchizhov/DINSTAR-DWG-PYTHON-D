@@ -1,3 +1,6 @@
 .idea
 dwgconfig.py
 *.pyc
+
+test.py
+test.txt

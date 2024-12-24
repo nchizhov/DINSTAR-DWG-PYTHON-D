@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import dwgconfig
 import socket
@@ -10,7 +9,7 @@ from daemon import Daemon
 from logger import create_logger
 
 
-def main():
+def main() -> None:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('', dwgconfig.port))
     sock.listen(1)
@@ -19,7 +18,7 @@ def main():
     try:
         while True:
             conn, addr = sock.accept()
-            logging.info('[SYSTEM] Gateway connected %s' % addr[0])
+            logging.info('[SYSTEM] Gateway connected {addr}'.format(addr=addr[0]))
             DWGD(conn)
             logging.info('[SYSTEM] Gateway disconnected')
     except KeyboardInterrupt:
@@ -30,24 +29,24 @@ def main():
         sock.close()
 
 
-def usage():
-    print """
+def usage() -> None:
+    print("""
 Script usage parameters:
     debug - Run script in current console with debug mode.
     start - Run script as daemon
     stop - Stop daemon
     restart - Rerun script as daemon
     help - Show this help
-"""
+""")
 
 
 class DWGDaemon(Daemon):
-    def run(self):
+    def run(self) -> None:
         main()
 
 
 """
-Check agrvs
+Check args
 """
 if __name__ == "__main__":
     daemon = DWGDaemon(dwgconfig.pidfile)
