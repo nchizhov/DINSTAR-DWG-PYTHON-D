@@ -100,8 +100,8 @@ class DWGD:
             sdata['type'] = 12
             sdata['body'] = pack('!?', False)
         elif htype == 15:   # Auth for API 2.0
-            body = {'login': unpack('!16s', data[0:16])[0].replace(b'\x00', b''),
-                    'password': unpack('!16s', data[16:])[0].replace(b'\x00', b'')}
+            body = {'login': unpack('!16s', data[0:16])[0].replace(b'\x00', b'').decode(),
+                    'password': unpack('!16s', data[16:])[0].replace(b'\x00', b'').decode()}
             if body['login'] == dwgconfig.login and body['password'] == dwgconfig.password:
                 sdata['type'] = 16
                 sdata['body'] = pack('!?', False)
